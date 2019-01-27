@@ -1,0 +1,33 @@
+"""A Chingu User account"""
+type User {
+  """Unique identifier for a Chingu User account"""
+  id: ID!
+  """Email address of the Chingu User"""
+  email: String!
+}
+
+type Query {
+  """Look up a Chingu User account by their ID"""
+  getUserByID(id: ID!): User!
+}
+
+"""Registration details for creating a new Chingu account"""
+input UserRegistration {
+  """Email address of the new User"""
+  email: String!
+  """
+  Password for the new user
+  Constraints:
+
+  - min 6 characters
+  - one uppercase character
+  - one numeric character
+  - one non-alphanumeric character
+  """
+  password: String!
+}
+
+type Mutation {
+  """Registers a new user"""
+  register(input: UserRegistration!): User!
+}

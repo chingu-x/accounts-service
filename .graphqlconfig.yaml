@@ -1,0 +1,3 @@
+projects:
+  accounts-service:
+    schemaPath: server/schema.graphql
