@@ -118,5 +118,25 @@ describe("User Model: static methods", () => {
         expect(error.invalidArgs).toContain("input.email");
       }
     });
+
+    test("Throws a UserInputError Error when given an invalid password", async () => {
+      const { register, verifyPassword, verifyAndHashPassword } = staticMethods;
+
+      const password = "abc";
+      const User = {
+        count: () => 0,
+        register,
+        verifyPassword,
+        verifyAndHashPassword,
+      };
+
+      try {
+        await User.register({ email: mockUser.email, password });
+      } catch (error) {
+        expect(error.constructor.name).toBe("UserInputError");
+        expect(error.message).toBe("Password must be at least 6 characters");
+        expect(error.invalidArgs).toContain("input.password");
+      }
+    });
   });
 });
