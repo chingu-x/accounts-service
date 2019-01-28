@@ -6,8 +6,8 @@
  * @param {string} options.message The expected Error message
  * @param {[string]} options.invalidArgs An Array of invalid arguments [Apollo Errors only]
  */
-const testError = options => {
-  const { error, errorType, message, invalidArgs } = options;
+function testError(options) {
+  const { error, errorType = "Error", message, invalidArgs } = options;
 
   expect(error).toBeDefined();
   expect(error.constructor.name).toBe(errorType);
@@ -15,7 +15,7 @@ const testError = options => {
   if (invalidArgs) {
     expect(error.invalidArgs).toEqual(expect.arrayContaining(invalidArgs));
   }
-};
+}
 
 module.exports = {
   testError,
