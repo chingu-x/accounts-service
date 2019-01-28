@@ -1,4 +1,5 @@
 const f = require("faker");
+const { testError } = require("../../../../test_utils");
 const staticMethods = require("../user-static_methods");
 
 describe("User Model: static methods", () => {
@@ -99,9 +100,12 @@ describe("User Model: static methods", () => {
       try {
         await User.register(input);
       } catch (error) {
-        expect(error.constructor.name).toBe("UserInputError");
-        expect(error.message).toBe("A user with this email already exists");
-        expect(error.invalidArgs).toContain("input.email");
+        testError({
+          error,
+          errorType: "UserInputError",
+          message: "A user with this email already exists",
+          invalidArgs: ["input.email"],
+        });
       }
     });
 
@@ -117,9 +121,12 @@ describe("User Model: static methods", () => {
       try {
         await User.register({ email: input.email, password: "abc" });
       } catch (error) {
-        expect(error.constructor.name).toBe("UserInputError");
-        expect(error.message).toBe("Password must be at least 6 characters");
-        expect(error.invalidArgs).toContain("input.password");
+        testError({
+          error,
+          errorType: "UserInputError",
+          message: "Password must be at least 6 characters",
+          invalidArgs: ["input.password"],
+        });
       }
     });
   });
