@@ -45,8 +45,8 @@ function verifyPassword(password) {
  * @param {string} password A plain text text password
  * @return {string} A validated and hashed password
  */
-function verifyAndHashPassword(password) {
-  verifyPassword(password);
+async function verifyAndHashPassword(password) {
+  this.verifyPassword(password);
   return this.hashPassword(password);
 }
 

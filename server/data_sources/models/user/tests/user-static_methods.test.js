@@ -15,11 +15,11 @@ describe("User Model: static methods", () => {
   });
 
   describe("verifyPassword(): validates the password", () => {
-    const { verifyPassword } = staticMethods;
+    const User = { verifyPassword: staticMethods.verifyPassword };
 
     test("throws an error if the length is < 6", () => {
       try {
-        verifyPassword("abc");
+        User.verifyPassword("abc");
       } catch (error) {
         expect(error.message).toBe("Password must be at least 6 characters");
       }
@@ -27,7 +27,7 @@ describe("User Model: static methods", () => {
 
     test("throws an error if there are no uppercase characters", () => {
       try {
-        verifyPassword("abcdefg");
+        User.verifyPassword("abcdefg");
       } catch (error) {
         expect(error.message).toBe(
           "Password must include one uppercase character",
@@ -37,7 +37,7 @@ describe("User Model: static methods", () => {
 
     test("throws an error if there are no numeric characters", () => {
       try {
-        verifyPassword("Abcdefg");
+        User.verifyPassword("Abcdefg");
       } catch (error) {
         expect(error.message).toBe(
           "Password must include one numeric character",
@@ -47,13 +47,29 @@ describe("User Model: static methods", () => {
 
     test("throws an error if there are no non-alphanumeric characters", () => {
       try {
-        verifyPassword("Abcdefg5");
+        User.verifyPassword("Abcdefg5");
       } catch (error) {
         expect(error.message).toBe(
           "Password must include one non-alphanumeric character",
         );
       }
     });
+  });
+
+  test("verifyAndHashPassword(): composes verifyPassword() and hashPassword()", async () => {
+    const User = {
+      verifyPassword: () => {},
+      hashPassword: () => {},
+      verifyAndHashPassword: staticMethods.verifyAndHashPassword,
+    };
+
+    const password = "password";
+    const verifySpy = jest.spyOn(User, "verifyPassword");
+    const verifyHash = jest.spyOn(User, "hashPassword");
+
+    await User.verifyAndHashPassword(password);
+    expect(verifySpy).toHaveBeenCalledWith(password);
+    expect(verifyHash).toHaveBeenCalledWith(password);
   });
 
   describe("register(): registers a new Chingu User", () => {
