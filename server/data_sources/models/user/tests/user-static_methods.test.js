@@ -1,12 +1,6 @@
 const f = require("faker");
 const staticMethods = require("../user-static_methods");
 
-const mockUser = {
-  id: f.random.number(),
-  email: f.internet.email(),
-  plainPassword: f.internet.password(),
-};
-
 describe("User Model: static methods", () => {
   test("hashPassword(): hashes a plain text password", async () => {
     const password = "some password";
@@ -73,32 +67,27 @@ describe("User Model: static methods", () => {
   });
 
   describe("register(): registers a new Chingu User", () => {
-    test("Creates a new user given valid input", async () => {
-      const hashedPassword = `${mockUser.plainPassword}55`;
+    const input = {
+      email: f.internet.email(),
+      plainPassword: f.internet.password(),
+    };
 
+    test("Creates a new user given valid input", async () => {
+      const hashedPassword = `${input.password}55`;
       const User = {
-        create: ({ email, password }) => ({
-          id: mockUser.id,
-          email,
-          password,
-        }),
+        create: () => {},
         count: () => 0,
         verifyAndHashPassword: password => hashedPassword,
         register: staticMethods.register,
       };
 
-      const newUser = await User.register({
-        email: mockUser.email,
-        password: mockUser.plainPassword,
-      });
+      const createSpy = jest.spyOn(User, "create");
 
-      const expected = {
-        id: mockUser.id,
-        email: mockUser.email,
+      await User.register(input);
+      expect(createSpy).toHaveBeenCalledWith({
+        email: input.email,
         password: hashedPassword,
-      };
-
-      expect(newUser).toEqual(expected);
+      });
     });
 
     test("Throws a UserInputError Error when given an email that is already registered", async () => {
@@ -108,10 +97,7 @@ describe("User Model: static methods", () => {
       };
 
       try {
-        await User.register({
-          email: mockUser.email,
-          password: mockUser.plainPassword,
-        });
+        await User.register(input);
       } catch (error) {
         expect(error.constructor.name).toBe("UserInputError");
         expect(error.message).toBe("A user with this email already exists");
@@ -121,8 +107,6 @@ describe("User Model: static methods", () => {
 
     test("Throws a UserInputError Error when given an invalid password", async () => {
       const { register, verifyPassword, verifyAndHashPassword } = staticMethods;
-
-      const password = "abc";
       const User = {
         count: () => 0,
         register,
@@ -131,7 +115,7 @@ describe("User Model: static methods", () => {
       };
 
       try {
-        await User.register({ email: mockUser.email, password });
+        await User.register({ email: input.email, password: "abc" });
       } catch (error) {
         expect(error.constructor.name).toBe("UserInputError");
         expect(error.message).toBe("Password must be at least 6 characters");
