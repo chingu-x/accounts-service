@@ -14,6 +14,48 @@ describe("User Model: static methods", () => {
     expect(hashedPassword).not.toEqual(password);
   });
 
+  describe("verifyPassword(): validates the password", () => {
+    const { verifyPassword } = staticMethods;
+
+    test("throws an error if the length is < 6", () => {
+      try {
+        verifyPassword("abc");
+      } catch (error) {
+        expect(error.message).toBe("Password must be at least 6 characters");
+      }
+    });
+
+    test("throws an error if there are no uppercase characters", () => {
+      try {
+        verifyPassword("abcdefg");
+      } catch (error) {
+        expect(error.message).toBe(
+          "Password must include one uppercase character",
+        );
+      }
+    });
+
+    test("throws an error if there are no numeric characters", () => {
+      try {
+        verifyPassword("Abcdefg");
+      } catch (error) {
+        expect(error.message).toBe(
+          "Password must include one numeric character",
+        );
+      }
+    });
+
+    test("throws an error if there are no non-alphanumeric characters", () => {
+      try {
+        verifyPassword("Abcdefg5");
+      } catch (error) {
+        expect(error.message).toBe(
+          "Password must include one non-alphanumeric character",
+        );
+      }
+    });
+  });
+
   describe("register(): registers a new Chingu User", () => {
     test("Creates a new user given valid input", async () => {
       const hashedPassword = `${mockUser.plainPassword}55`;
@@ -46,15 +88,18 @@ describe("User Model: static methods", () => {
     test("Throws a UserInputError Error when given an email that is already registered", async () => {
       const User = {
         count: () => 1,
-        register: staticMethods.register
+        register: staticMethods.register,
       };
 
       try {
-        await User.register({ email: mockUser.email, password: mockUser.plainPassword });
-      } catch(error) {
-        expect(error.constructor.name).toBe('UserInputError');
-        expect(error.message).toBe('A user with this email already exists');
-        expect(error.invalidArgs).toContain('input.email');
+        await User.register({
+          email: mockUser.email,
+          password: mockUser.plainPassword,
+        });
+      } catch (error) {
+        expect(error.constructor.name).toBe("UserInputError");
+        expect(error.message).toBe("A user with this email already exists");
+        expect(error.invalidArgs).toContain("input.email");
       }
     });
   });
