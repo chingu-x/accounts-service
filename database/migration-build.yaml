@@ -1,0 +1,13 @@
+steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-f", "database/Dockerfile", "-t", "gcr.io/chingu/accounts-service-migrator:$REVISION_ID", "."]
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["push", "gcr.io/chingu/accounts-service-migrator:$REVISION_ID"]
+  - name: "gcr.io/cloud-builders/kubectl"
+    entrypoint: /bin/bash
+    args: ["-c", "cat database/migration-job.yaml | sed 's/REVISION_ID/$REVISION_ID/g' | /builder/kubectl.bash replace --force --grace-period=0 -f -"]
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=${_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CONTAINER_CLUSTER}'
+images:
+  - "gcr.io/chingu/accounts-service-migrator:$REVISION_ID"

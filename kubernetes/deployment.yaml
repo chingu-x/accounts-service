@@ -1,0 +1,70 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: accounts-service
+  labels:
+    app: accounts-service
+spec:
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app: accounts-service
+    spec:
+      containers:
+        - name: app
+          image: gcr.io/chingu/accounts-service
+          resources:
+            limits:
+              memory: 100Mi
+              cpu: "0.3"
+            requests:
+              memory: 60Mi
+              cpu: "0.1"
+          ports:
+            - name: http-server
+              containerPort: 3000
+          env:
+            - name: NODE_PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: production
+            - name: DB_NAME
+              value: accounts
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-db-credentials
+                  key: password
+        - name: cloudsql-proxy
+          resources:
+            limits:
+              memory: 100Mi
+              cpu: "0.3"
+            requests:
+              memory: 60Mi
+              cpu: "0.1"
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: [
+            "/cloud_sql_proxy",
+            "-instances=chingu:us-central1:prod-db-1=tcp:5432",
+            "-credential_file=/secrets/cloudsql/credentials.json",
+          ]
+          securityContext:
+            runAsUser: 2 # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+      volumes:
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials

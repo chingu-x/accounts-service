@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: accounts-service-migrator
+  labels:
+    migrator: accounts-service
+spec:
+  activeDeadlineSeconds: 300
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrator
+          image: gcr.io/chingu/accounts-service-migrator:REVISION_ID
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              trap "touch /tmp/pod/main-terminated" EXIT
+              /app/migrate.sh
+          resources:
+            limits:
+              memory: 100Mi
+              cpu: "0.3"
+            requests:
+              memory: 60Mi
+              cpu: "0.1"
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: DB_NAME
+              value: accounts
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-db-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: accounts-service-db-credentials
+                  key: password
+          volumeMounts:
+            - name: tmp-pod
+              mountPath: /tmp/pod
+        - name: cloudsql-proxy
+          resources:
+            limits:
+              memory: 100Mi
+              cpu: "0.3"
+            requests:
+              memory: 60Mi
+              cpu: "0.1"
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              /cloud_sql_proxy -instances=chingu:us-central1:prod-db-1=tcp:5432 -credential_file=/secrets/cloudsql/credentials.json &
+              CHILD_PID=$!
+              (while true; do if [[ -f "/tmp/pod/main-terminated" ]]; then kill $CHILD_PID; echo "Killed $CHILD_PID as the main container terminated."; fi; sleep 1; done) &
+              wait $CHILD_PID
+              if [[ -f "/tmp/pod/main-terminated" ]]; then exit 0; echo "Job completed. Exiting..."; fi
+          securityContext:
+            runAsUser: 2 # non-root user
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+            - name: tmp-pod
+              mountPath: /tmp/pod
+              readOnly: true
+      volumes:
+        - name: tmp-pod
+          emptyDir: {}
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials

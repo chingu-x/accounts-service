@@ -3,7 +3,7 @@ const {
   DB_PORT: port = '5432',
   DB_USERNAME: username = 'postgres',
   DB_PASSWORD: password,
-  DB_NAME: database = 'accounts_db',
+  DB_NAME: database = 'accounts',
 } = process.env;
 
 const profile = {
@@ -12,7 +12,8 @@ const profile = {
   username,
   password,
   database,
-  dialect: 'postgres'
+  dialect: 'postgres',
+  operatorsAliases: false
 };
 
 module.exports = {
