@@ -1,6 +1,6 @@
 steps:
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/chingu/accounts-service:$REVISION_ID", ".", "--build-args", "NPM_TOKEN=${_NPM_TOKEN}"]
+    args: ["build", "--build-args", "NPM_TOKEN=${_NPM_TOKEN}", "-t", "gcr.io/chingu/accounts-service:$REVISION_ID", "."]
   - name: "gcr.io/cloud-builders/docker"
     args: ["push", "gcr.io/chingu/accounts-service:$REVISION_ID"]
   - name: "gcr.io/cloud-builders/kubectl"
